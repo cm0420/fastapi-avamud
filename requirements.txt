@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+sqlmodel
+PyMySQL
+pydantic-settings
+passlib[bcrypt]
+python-jose[cryptography]
+email-validator

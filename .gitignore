@@ -1,0 +1,17 @@
+# Ambiente virtual do Python
+venv/
+
+# Arquivo de segredos (SENHAS!)
+.env
+
+# Cache do Python
+__pycache__/
+*.pyc
+
+# Configurações do editor (Opcional, mas boa prática)
+.vscode/
+
+# Arquivos de diagrama (Opcional, eles podem ser gerados novamente)
+# Se quiser salvar os diagramas, apague as linhas abaixo.
+*.png
+*.dot

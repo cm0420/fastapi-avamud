@@ -1,0 +1,19 @@
+# docker-compose.yml
+
+version: '3.8'
+
+services:
+  # Este é o nosso servidor MySQL
+  db:
+    image: mysql:8.0         # Imagem oficial do MySQL
+    container_name: avamud-db
+    ports:
+      - "3306:3306"          # Expõe a porta 3306 do contêiner para a sua máquina
+    environment:
+      MYSQL_DATABASE: avamud             # Já cria o banco 'avamud'
+      MYSQL_ROOT_PASSWORD: root          # Define a senha do 'root' como 'root'
+    volumes:
+      - mysql-data:/var/lib/mysql  # Garante que os dados não se percam
+
+volumes:
+  mysql-data:
