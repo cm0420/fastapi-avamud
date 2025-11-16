@@ -4,12 +4,16 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlmodel import Session
 from typing import List
 
+
+
+
 from app.db.database import get_session
+from app.services.payment_service import PaymentService
 from app.services.user_service import UserService
-from app.dependencies import get_user_service
+from app.dependencies import get_user_service, get_payment_service
 from app.security.auth import get_current_user # Nossa dependência de segurança!
 from app.models.models import User
-from app.schemas.schemas import UserCreate, UserRead, UserUpdate
+from app.schemas.schemas import UserCreate, UserRead, UserUpdate, PaymentRead
 
 router = APIRouter(
     prefix="/users",
@@ -130,3 +134,45 @@ def delete_user(
     
     # Retorna uma resposta vazia com status 204
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/{id}/approve", response_model=PaymentRead)
+def approve_payment_endpoint(
+        id: int,
+        session: Session = Depends(get_session),
+        payment_service: PaymentService = Depends(get_payment_service),
+        current_user: User = Depends(get_current_user)
+):
+    """
+    [AÇÃO] Aprova um pagamento pendente.
+    """
+    # A lógica de negócios (verificar se está pendente)
+    # já está no serviço. O router apenas chama.
+    approved_payment = payment_service.approve_payment(
+        session, id, user_id=current_user.id
+    )
+
+    if approved_payment is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Pagamento não encontrado")
+
+    return approved_payment
+
+
+@router.post("/{id}/cancel", response_model=PaymentRead)
+def cancel_payment_endpoint(
+        id: int,
+        session: Session = Depends(get_session),
+        payment_service: PaymentService = Depends(get_payment_service),
+        current_user: User = Depends(get_current_user)
+):
+    """
+    [AÇÃO] Cancela um pagamento (desde que não esteja aprovado).
+    """
+    canceled_payment = payment_service.cancel_payment(
+        session, id, user_id=current_user.id
+    )
+
+    if canceled_payment is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Pagamento não encontrado")
+
+    return canceled_payment

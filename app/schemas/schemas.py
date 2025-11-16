@@ -1,10 +1,14 @@
 # app/schemas/schemas.py
 
-from sqlmodel import SQLModel
+from sqlmodel import SQLModel, Field
 from pydantic import EmailStr, BaseModel  # BaseModel é um DTO puro
 from typing import Optional, List
 from datetime import datetime
 from decimal import Decimal
+from enum import Enum
+
+
+
 
 # --- Schemas de Autenticação (AuthDto, AcessDto) ---
 # Como estes não refletem uma tabela, usamos BaseModel
@@ -96,3 +100,41 @@ class UserUpdate(UserBase):
     email: Optional[EmailStr] = None
     login: Optional[str] = None
     senha: Optional[str] = None # Permite atualização de senha opcional
+
+# 1. Defina os status possíveis
+class PaymentStatus(str, Enum):
+    PENDENTE = "Pendente"
+    APROVADO = "Aprovado"
+    CANCELADO = "Cancelado"
+
+class PaymentBase(SQLModel):
+    valor: Decimal
+    dataPagamento: Optional[datetime] = None
+    # 2. Adicione o status ao schema base
+    status: PaymentStatus = Field(default=PaymentStatus.PENDENTE, index=True)
+
+class PaymentCreate(PaymentBase):
+    user_id: int
+
+class PaymentRead(PaymentBase):
+    id: int
+    user_id: int
+    # 'status' já será herdado do PaymentBase
+
+class PaymentUpdate(SQLModel):
+    # 3. Alterado: Não herda mais de PaymentBase
+    # Isso evita que o endpoint PUT genérico mude o status
+    # A mudança de status deve ocorrer por lógica de negócio (approve/cancel)
+    valor: Optional[Decimal] = None
+    dataPagamento: Optional[datetime] = None
+
+# 4. (Novo) Schema interno para o serviço usar
+class PaymentStatusUpdate(SQLModel):
+    status: PaymentStatus
+
+# --- Schemas de PaymentHistory ---
+...
+
+# --- Schemas de User ---
+...
+
