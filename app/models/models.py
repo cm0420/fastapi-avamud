@@ -5,13 +5,21 @@ from decimal import Decimal
 from enum import Enum
 
 
-# --- Enums para o Status do Pagamento ---
+# --- Enums ---
 class PaymentStatus(str, Enum):
-    PENDENTE = "PENDENTE"  # Aguardando pagamento
-    EM_ANALISE = "EM_ANALISE"  # Membro anexou comprovante
-    APROVADO = "APROVADO"  # Tesoureiro validou
-    REJEITADO = "REJEITADO"  # Tesoureiro recusou
+    PENDENTE = "PENDENTE"
+    EM_ANALISE = "EM_ANALISE"
+    APROVADO = "APROVADO"
+    REJEITADO = "REJEITADO"
+    CANCELADO = "CANCELADO"
 
+
+class Role(str, Enum):
+    ADMIN = "ADMIN"  # Tesoureiro
+    MEMBER = "MEMBER"  # Membro Comum / Ambulante
+
+
+# --- Tabelas ---
 
 class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -23,6 +31,10 @@ class User(SQLModel, table=True):
     senha: str
     login: str = Field(unique=True, index=True)
     dataDeEntrada: Optional[datetime] = Field(default_factory=datetime.now)
+
+    # Novos campos de controle
+    role: Role = Field(default=Role.MEMBER)
+    active: bool = Field(default=True)
 
     addresses: List["Address"] = Relationship(
         back_populates="user",
@@ -51,17 +63,16 @@ class Address(SQLModel, table=True):
 class Payment(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    # Dados Financeiros
     valor: Decimal = Field(max_digits=10, decimal_places=2)
-    data_vencimento: datetime = Field(default_factory=datetime.now)  # Data do carnê
-    data_pagamento: Optional[datetime] = None  # Data real da baixa
+    data_vencimento: datetime = Field(default_factory=datetime.now)
+    data_pagamento: Optional[datetime] = None
 
-    # Fluxo de Aprovação
     status: PaymentStatus = Field(default=PaymentStatus.PENDENTE)
     link_comprovante: Optional[str] = None
     observacao: Optional[str] = None
 
-    # Relações
+    motivo_cancelamento: Optional[str] = None
+
     user_id: Optional[int] = Field(default=None, foreign_key="user.id")
     user: Optional[User] = Relationship(back_populates="payments")
 
@@ -83,3 +94,4 @@ class PaymentHistory(SQLModel, table=True):
 
     payment_id: Optional[int] = Field(default=None, foreign_key="payment.id")
     payment: Optional[Payment] = Relationship(back_populates="history")
+

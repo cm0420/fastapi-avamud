@@ -3,7 +3,7 @@ from pydantic import EmailStr, BaseModel
 from typing import Optional, List
 from datetime import datetime
 from decimal import Decimal
-from app.models.models import PaymentStatus
+from app.models.models import PaymentStatus, Role
 
 
 # --- Schemas de Autenticação ---
@@ -40,7 +40,6 @@ class AddressUpdate(AddressBase):
 
 
 # --- Schemas de Payment ---
-
 class PaymentBase(SQLModel):
     valor: Decimal
     data_vencimento: datetime
@@ -66,7 +65,6 @@ class PaymentUpdate(BaseModel):
     data_vencimento: Optional[datetime] = None
 
 
-# Schemas Específicos do Fluxo
 class PaymentAttachProof(BaseModel):
     link_comprovante: str
 
@@ -93,6 +91,7 @@ class UserBase(SQLModel):
     telefone: str
     email: EmailStr
     login: str
+    role: Role = Role.MEMBER
 
 
 class UserCreate(UserBase):
@@ -102,6 +101,8 @@ class UserCreate(UserBase):
 class UserRead(UserBase):
     id: int
     dataDeEntrada: datetime
+    active: bool
+
     addresses: List[AddressRead] = []
     payments: List[PaymentRead] = []
 
@@ -114,10 +115,11 @@ class UserUpdate(UserBase):
     email: Optional[EmailStr] = None
     login: Optional[str] = None
     senha: Optional[str] = None
+    role: Optional[Role] = None
+    active: Optional[bool] = None
 
 
-# --- Schemas de Relatórios (Novos) ---
-
+# --- Schemas de Relatórios ---
 class ReportDebtor(BaseModel):
     user_id: int
     nome: str
@@ -127,8 +129,9 @@ class ReportDebtor(BaseModel):
     quantidade_boletos_abertos: int
     dias_atraso_medio: int
 
+
 class ReportRevenue(BaseModel):
-    mes: str # Ex: "2023-10"
+    mes: str
     total_arrecadado: Decimal
     total_pendente: Decimal
     qtd_pagamentos_confirmados: int
