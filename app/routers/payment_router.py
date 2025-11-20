@@ -1,3 +1,5 @@
+# app/routers/payment_router.py
+
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlmodel import Session
 from typing import List
@@ -10,7 +12,8 @@ from app.security.auth import get_current_user
 from app.models.models import User
 from app.schemas.schemas import (
     PaymentCreate, PaymentRead, PaymentUpdate,
-    PaymentHistoryRead, PaymentAttachProof, PaymentReview
+    PaymentHistoryRead, PaymentAttachProof, PaymentReview,
+    SystemConfigRead, SystemConfigUpdate
 )
 
 router = APIRouter(
@@ -19,6 +22,62 @@ router = APIRouter(
     dependencies=[Depends(get_current_user)]
 )
 
+
+# =================================================================
+# 1. ROTAS ESTÁTICAS (DEVEM VIR PRIMEIRO)
+# =================================================================
+
+@router.get("/config", response_model=SystemConfigRead)
+def get_payment_config(
+        session: Session = Depends(get_session),
+        service: PaymentService = Depends(get_payment_service),
+        current_user: User = Depends(get_current_user)
+):
+    """Vê o valor atual da mensalidade."""
+    return service.get_config(session)
+
+
+@router.put("/config", response_model=SystemConfigRead)
+def update_payment_config(
+        config_in: SystemConfigUpdate,
+        session: Session = Depends(get_session),
+        service: PaymentService = Depends(get_payment_service),
+        current_user: User = Depends(get_current_user)
+):
+    """Altera o valor padrão da mensalidade (Apenas Admin)."""
+    if current_user.role != "ADMIN":
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Apenas Admin altera configuração.")
+
+    return service.update_config(session, config_in)
+
+
+@router.post("/generate-batch")
+def generate_monthly_payments(
+        session: Session = Depends(get_session),
+        service: PaymentService = Depends(get_payment_service),
+        current_user: User = Depends(get_current_user)
+):
+    """
+    Gera a cobrança do mês para TODOS os membros ativos.
+    """
+    if current_user.role != "ADMIN":
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Apenas Admin gera cobranças.")
+
+    return service.gerar_mensalidades_lote(session, current_user.id)
+
+
+@router.get("/history", response_model=List[PaymentHistoryRead])
+def get_all_payment_history(
+        session: Session = Depends(get_session),
+        history_service: PaymentHistoryService = Depends(get_history_service)
+):
+    """Busca todo o histórico de pagamentos."""
+    return history_service.get_all_history(session)
+
+
+# =================================================================
+# 2. ROTAS DE COLEÇÃO (LISTAR/CRIAR)
+# =================================================================
 
 @router.post("/", response_model=PaymentRead, status_code=status.HTTP_201_CREATED)
 def create_payment(
@@ -31,6 +90,18 @@ def create_payment(
     return payment_service.create_payment(session, payment_in)
 
 
+@router.get("/", response_model=List[PaymentRead])
+def get_all_payments(
+        session: Session = Depends(get_session),
+        payment_service: PaymentService = Depends(get_payment_service)
+):
+    return payment_service.get_all_payments(session)
+
+
+# =================================================================
+# 3. ROTAS DINÂMICAS COM ID (DEVEM VIR POR ÚLTIMO)
+# =================================================================
+
 @router.post("/{id}/comprovante", response_model=PaymentRead)
 def upload_comprovante(
         id: int,
@@ -40,7 +111,6 @@ def upload_comprovante(
         current_user: User = Depends(get_current_user)
 ):
     """Membro: Anexa o link do comprovante."""
-    # Validação extra: só o próprio usuário deve anexar (ou admin)
     payment = service.get_payment_by_id(session, id)
     if payment and payment.user_id != current_user.id:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Não autorizado a mexer neste pagamento.")
@@ -58,14 +128,6 @@ def validar_pagamento(
 ):
     """Tesoureiro: Aprova ou Rejeita o pagamento."""
     return service.validar_pagamento(session, id, review_data, current_user.id)
-
-
-@router.get("/", response_model=List[PaymentRead])
-def get_all_payments(
-        session: Session = Depends(get_session),
-        payment_service: PaymentService = Depends(get_payment_service)
-):
-    return payment_service.get_all_payments(session)
 
 
 @router.get("/{id}", response_model=PaymentRead)
@@ -109,16 +171,6 @@ def delete_payment(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-# --- Endpoints de Histórico ---
-
-@router.get("/history", response_model=List[PaymentHistoryRead])
-def get_all_payment_history(
-        session: Session = Depends(get_session),
-        history_service: PaymentHistoryService = Depends(get_history_service)
-):
-    return history_service.get_all_history(session)
-
-
 @router.get("/{payment_id}/history", response_model=List[PaymentHistoryRead])
 def get_payment_history(
         payment_id: int,
@@ -126,4 +178,3 @@ def get_payment_history(
         history_service: PaymentHistoryService = Depends(get_history_service)
 ):
     return history_service.get_history_by_payment_id(session, payment_id)
-

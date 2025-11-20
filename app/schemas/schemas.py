@@ -136,3 +136,11 @@ class ReportRevenue(BaseModel):
     total_pendente: Decimal
     qtd_pagamentos_confirmados: int
 
+# --- Schemas de Configuração ---
+class SystemConfigRead(SQLModel):
+    valor_mensalidade: Decimal
+    dia_vencimento: int
+
+class SystemConfigUpdate(BaseModel):
+    valor_mensalidade: Optional[Decimal] = None
+    dia_vencimento: Optional[int] = None

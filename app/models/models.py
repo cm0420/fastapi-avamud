@@ -95,3 +95,13 @@ class PaymentHistory(SQLModel, table=True):
     payment_id: Optional[int] = Field(default=None, foreign_key="payment.id")
     payment: Optional[Payment] = Relationship(back_populates="history")
 
+
+class SystemConfig(SQLModel, table=True):
+    """
+    Tabela Singleton (só terá 1 linha) para configurações globais.
+    """
+    __tablename__ = "system_config"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    valor_mensalidade: Decimal = Field(default=Decimal("50.00"), max_digits=10, decimal_places=2)
+    dia_vencimento: int = Field(default=10)  # Ex: Todo dia 10
