@@ -1,57 +1,50 @@
 # app/security/auth.py
 
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials  # <--- Mudança aqui
 from sqlmodel import Session
 
-from app.db.database import get_session # Dependência da Sessão
+from app.db.database import get_session
 from app.services.user_service import UserService
-from app.dependencies import get_user_service # Dependência do Serviço
-from app.security import jwt # Nosso utilitário JWT
+from app.dependencies import get_user_service
+from app.security import jwt
 from app.models.models import User
 
-
-# 1. Isto define o "esquema" de segurança.
-# O 'tokenUrl' aponta para o endpoint de login que AINDA VAMOS CRIAR.
-# É o equivalente a configurar o 'loginProcessingUrl' no Spring Security.
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+# Usamos HTTPBearer para aparecer uma caixa de texto simples no Swagger
+security = HTTPBearer()
 
 
 def get_current_user(
-    # 2. Injeta as dependências que precisamos
-    token: str = Depends(oauth2_scheme), 
-    session: Session = Depends(get_session),
-    user_service: UserService = Depends(get_user_service)
+        auth: HTTPAuthorizationCredentials = Depends(security),  # <--- O token vem aqui dentro
+        session: Session = Depends(get_session),
+        user_service: UserService = Depends(get_user_service)
 ) -> User:
-    """
-    Esta função é a nossa "Dependência de Segurança".
-    Ela faz o trabalho do AuthFilterToken e 
-    UserDetailServiceImpl combinados.
-    """
-    
-    # 3. Define uma exceção padrão (equivalente ao AuthEntrypointJwt)
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Credenciais inválidas",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    
-    # 4. Decodifica o token (vem do jwt.py)
+
+    # Extrai o token da credencial (O Swagger envia "Bearer <token>")
+    token = auth.credentials
+
+    # Decodifica o token
     payload = jwt.decode_token(token)
     if payload is None:
         raise credentials_exception
-    
-    # 5. Pega o 'subject' (username) do token
-    username: str = payload.get("sub")
+
+    username: str = payload.get("sub")  # No jwt.py usamos "sub" ou "username"? Vamos conferir.
+    # ATENÇÃO: No seu jwt.py você usou 'username' no payload, não 'sub'.
+    # Vou ajustar para garantir que funcione com o seu jwt.py atual.
+    if username is None:
+        username = payload.get("username")  # Tenta pegar pelo campo username
+
     if username is None:
         raise credentials_exception
-    
-    # 6. Busca o usuário no banco (o trabalho do UserDetailServiceImpl)
+
     user = user_service.get_user_by_login(session, login=username)
-    
-    # 7. Se não encontrar, lança a exceção
+
     if user is None:
         raise credentials_exception
-        
-    # 8. Retorna o objeto User completo
+
     return user

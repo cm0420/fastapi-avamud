@@ -12,6 +12,7 @@ from app.repositories.address_repository import AddressRepository
 from app.repositories.payment_repository import PaymentRepository
 from app.repositories.payment_history_repository import PaymentHistoryRepository
 from app.repositories.payment_report_repository import PaymentReportRepository # <--- NOVO IMPORT
+from app.services.document_service import DocumentService # <--- NOVO
 
 # Importa todas as nossas classes de Serviço
 from app.services.user_service import UserService
@@ -70,3 +71,6 @@ def get_auth_service() -> AuthService:
 
 def get_report_service() -> PaymentReportService: # <--- NOVO SERVIÇO
     return PaymentReportService(report_repo=get_report_repo())
+
+def get_document_service() -> DocumentService:
+    return DocumentService()
