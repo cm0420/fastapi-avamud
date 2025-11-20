@@ -114,3 +114,22 @@ class UserUpdate(UserBase):
     email: Optional[EmailStr] = None
     login: Optional[str] = None
     senha: Optional[str] = None
+
+
+# --- Schemas de Relatórios (Novos) ---
+
+class ReportDebtor(BaseModel):
+    user_id: int
+    nome: str
+    email: str
+    telefone: str
+    total_devido: Decimal
+    quantidade_boletos_abertos: int
+    dias_atraso_medio: int
+
+class ReportRevenue(BaseModel):
+    mes: str # Ex: "2023-10"
+    total_arrecadado: Decimal
+    total_pendente: Decimal
+    qtd_pagamentos_confirmados: int
+

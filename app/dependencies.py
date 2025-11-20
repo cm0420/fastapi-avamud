@@ -6,17 +6,20 @@ Isto é o coração da nossa arquitetura OOP,
 equivalente ao container de DI do Spring (@Autowired, @Bean).
 """
 
-# Importa todas as nossas classes
+# Importa todas as nossas classes de Repositório
 from app.repositories.user_repository import UserRepository
 from app.repositories.address_repository import AddressRepository
 from app.repositories.payment_repository import PaymentRepository
 from app.repositories.payment_history_repository import PaymentHistoryRepository
+from app.repositories.payment_report_repository import PaymentReportRepository # <--- NOVO IMPORT
 
+# Importa todas as nossas classes de Serviço
 from app.services.user_service import UserService
 from app.services.address_service import AddressService
 from app.services.payment_service import PaymentService
 from app.services.payment_history_service import PaymentHistoryService
 from app.services.auth_service import AuthService
+from app.services.payment_report_service import PaymentReportService # <--- NOVO IMPORT
 
 
 # --- PROVEDORES DE REPOSITÓRIOS ---
@@ -34,6 +37,9 @@ def get_payment_repo() -> PaymentRepository:
 
 def get_history_repo() -> PaymentHistoryRepository:
     return PaymentHistoryRepository()
+
+def get_report_repo() -> PaymentReportRepository: # <--- NOVO REPOSITÓRIO
+    return PaymentReportRepository()
 
 
 # --- PROVEDORES DE SERVIÇOS ---
@@ -61,3 +67,6 @@ def get_payment_service() -> PaymentService:
 
 def get_auth_service() -> AuthService:
     return AuthService(user_service=get_user_service())
+
+def get_report_service() -> PaymentReportService: # <--- NOVO SERVIÇO
+    return PaymentReportService(report_repo=get_report_repo())
