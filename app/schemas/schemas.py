@@ -1,29 +1,23 @@
-# app/schemas/schemas.py
-
-from sqlmodel import SQLModel, Field
-from pydantic import EmailStr, BaseModel  # BaseModel é um DTO puro
+from sqlmodel import SQLModel
+from pydantic import EmailStr, BaseModel
 from typing import Optional, List
 from datetime import datetime
 from decimal import Decimal
-from enum import Enum
+from app.models.models import PaymentStatus
 
 
-
-
-# --- Schemas de Autenticação (AuthDto, AcessDto) ---
-# Como estes não refletem uma tabela, usamos BaseModel
-
+# --- Schemas de Autenticação ---
 class AuthRequest(BaseModel):
     username: str
     password: str
 
+
 class AuthResponse(BaseModel):
     token: str
 
-# --- Schemas de Address (AddressDto) ---
 
+# --- Schemas de Address ---
 class AddressBase(SQLModel):
-    # DTO base com campos comuns
     rua: str
     numero: str
     bairro: str
@@ -31,37 +25,58 @@ class AddressBase(SQLModel):
     estado: str
     cep: str
 
+
 class AddressCreate(AddressBase):
-    # DTO para criar (tem o user_id)
     user_id: int
+
 
 class AddressRead(AddressBase):
-    # DTO para ler (tem o id)
     id: int
     user_id: int
-    
+
+
 class AddressUpdate(AddressBase):
-    # DTO para atualizar (só os campos base)
     pass
 
-# --- Schemas de Payment (PaymentDto) ---
+
+# --- Schemas de Payment ---
 
 class PaymentBase(SQLModel):
     valor: Decimal
-    dataPagamento: Optional[datetime] = None
+    data_vencimento: datetime
+
 
 class PaymentCreate(PaymentBase):
     user_id: int
 
+
 class PaymentRead(PaymentBase):
     id: int
     user_id: int
+    status: PaymentStatus
+    link_comprovante: Optional[str]
+    observacao: Optional[str]
+    data_pagamento: Optional[datetime]
+    data_vencimento: datetime
+    valor: Decimal
 
-class PaymentUpdate(PaymentBase):
-    pass
 
-# --- Schemas de PaymentHistory (PaymentHistoryDto) ---
+class PaymentUpdate(BaseModel):
+    valor: Optional[Decimal] = None
+    data_vencimento: Optional[datetime] = None
 
+
+# Schemas Específicos do Fluxo
+class PaymentAttachProof(BaseModel):
+    link_comprovante: str
+
+
+class PaymentReview(BaseModel):
+    aprovado: bool
+    observacao: Optional[str] = None
+
+
+# --- Schemas de PaymentHistory ---
 class PaymentHistoryRead(SQLModel):
     id: int
     action: str
@@ -69,72 +84,33 @@ class PaymentHistoryRead(SQLModel):
     user_id: Optional[int]
     payment_id: int
 
-# --- Schemas de User (UserDto) ---
 
+# --- Schemas de User ---
 class UserBase(SQLModel):
     nome: str
     cpf: str
     cnpj: str
     telefone: str
-    email: EmailStr # Valida o email automaticamente
+    email: EmailStr
     login: str
 
+
 class UserCreate(UserBase):
-    senha: str # Senha em texto plano, vamos fazer o hash no serviço
+    senha: str
+
 
 class UserRead(UserBase):
     id: int
     dataDeEntrada: datetime
-    
-    # Mostra os endereços e pagamentos aninhados na resposta
-    # Igual ao @JsonManagedReference / @JsonBackReference
     addresses: List[AddressRead] = []
     payments: List[PaymentRead] = []
 
+
 class UserUpdate(UserBase):
-    # Campos que podem ser atualizados
     nome: Optional[str] = None
     cpf: Optional[str] = None
     cnpj: Optional[str] = None
     telefone: Optional[str] = None
     email: Optional[EmailStr] = None
     login: Optional[str] = None
-    senha: Optional[str] = None # Permite atualização de senha opcional
-
-# 1. Defina os status possíveis
-class PaymentStatus(str, Enum):
-    PENDENTE = "Pendente"
-    APROVADO = "Aprovado"
-    CANCELADO = "Cancelado"
-
-class PaymentBase(SQLModel):
-    valor: Decimal
-    dataPagamento: Optional[datetime] = None
-    # 2. Adicione o status ao schema base
-    status: PaymentStatus = Field(default=PaymentStatus.PENDENTE, index=True)
-
-class PaymentCreate(PaymentBase):
-    user_id: int
-
-class PaymentRead(PaymentBase):
-    id: int
-    user_id: int
-    # 'status' já será herdado do PaymentBase
-
-class PaymentUpdate(SQLModel):
-    # 3. Alterado: Não herda mais de PaymentBase
-    # Isso evita que o endpoint PUT genérico mude o status
-    # A mudança de status deve ocorrer por lógica de negócio (approve/cancel)
-    valor: Optional[Decimal] = None
-    dataPagamento: Optional[datetime] = None
-
-# 4. (Novo) Schema interno para o serviço usar
-class PaymentStatusUpdate(SQLModel):
-    status: PaymentStatus
-
-# --- Schemas de PaymentHistory ---
-...
-
-# --- Schemas de User ---
-...
-
+    senha: Optional[str] = None
