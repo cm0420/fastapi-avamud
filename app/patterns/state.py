@@ -13,39 +13,39 @@ class PaymentState(ABC):
     @abstractmethod
     def anexar_comprovante(self, payment: Payment, link: str):
         """Tenta anexar comprovante"""
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Não é possível anexar comprovante no status atual."
-        )
+        pass
 
     @abstractmethod
     def validar(self, payment: Payment, aprovado: bool, observacao: str = None):
         """Tenta validar (Aprovar/Rejeitar)"""
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Não é possível validar pagamento no status atual."
-        )
+        pass
 
     @abstractmethod
     def cancelar(self, payment: Payment, motivo: str):
-        """Tenta cancelar"""
-        # Lógica padrão: quase todos podem cancelar, exceto se já cancelado
-        payment.status = PaymentStatus.CANCELADO
-        payment.motivo_cancelamento = motivo
-        payment.observacao = f"Cancelado: {motivo}"
+        """Tenta cancelar o pagamento"""
+        pass
 
 
 # 2. Estados Concretos
 
 class PendenteState(PaymentState):
     def anexar_comprovante(self, payment: Payment, link: str):
-        # Lógica: De Pendente -> Vai para Em Análise
+        # De Pendente -> Em Análise
         payment.link_comprovante = link
         payment.status = PaymentStatus.EM_ANALISE
         payment.data_pagamento = datetime.now()
 
     def validar(self, payment: Payment, aprovado: bool, observacao: str = None):
-        raise HTTPException(400, "Não é possível validar um pagamento sem comprovante (Pendente).")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Não é possível validar um pagamento sem comprovante (Pendente)."
+        )
+
+    def cancelar(self, payment: Payment, motivo: str):
+        # Pode cancelar se estiver pendente
+        payment.status = PaymentStatus.CANCELADO
+        payment.motivo_cancelamento = motivo
+        payment.observacao = f"Cancelado: {motivo}"
 
 
 class EmAnaliseState(PaymentState):
@@ -61,18 +61,32 @@ class EmAnaliseState(PaymentState):
             payment.status = PaymentStatus.REJEITADO
             payment.observacao = observacao
 
+    def cancelar(self, payment: Payment, motivo: str):
+        # Pode cancelar se estiver em análise
+        payment.status = PaymentStatus.CANCELADO
+        payment.motivo_cancelamento = motivo
+        payment.observacao = f"Cancelado: {motivo}"
+
 
 class AprovadoState(PaymentState):
     def anexar_comprovante(self, payment: Payment, link: str):
-        raise HTTPException(400, "Pagamento já aprovado. Não pode ser alterado.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Pagamento já aprovado. Não pode ser alterado."
+        )
 
     def validar(self, payment: Payment, aprovado: bool, observacao: str = None):
-        raise HTTPException(400, "Pagamento já está finalizado (Aprovado).")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Pagamento já está finalizado (Aprovado)."
+        )
 
     def cancelar(self, payment: Payment, motivo: str):
-        # Regra de negócio: Pode cancelar pagamento aprovado? Geralmente precisa de estorno.
-        # Vamos permitir com ressalva.
-        super().cancelar(payment, motivo)
+        # Regra de negócio: Pode cancelar pagamento aprovado? (Estorno)
+        # Vamos permitir para simplificar
+        payment.status = PaymentStatus.CANCELADO
+        payment.motivo_cancelamento = motivo
+        payment.observacao = f"Cancelado (Estorno): {motivo}"
 
 
 class RejeitadoState(PaymentState):
@@ -84,10 +98,30 @@ class RejeitadoState(PaymentState):
         payment.data_pagamento = datetime.now()
 
     def validar(self, payment: Payment, aprovado: bool, observacao: str = None):
-        raise HTTPException(400, "Pagamento rejeitado deve receber novo comprovante antes de validar.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Pagamento rejeitado deve receber novo comprovante antes de validar."
+        )
+
+    def cancelar(self, payment: Payment, motivo: str):
+        # Pode cancelar se estiver rejeitado
+        payment.status = PaymentStatus.CANCELADO
+        payment.motivo_cancelamento = motivo
+        payment.observacao = f"Cancelado: {motivo}"
 
 
-# 3. Factory (Para recuperar a classe certa baseada no Enum do Banco)
+class CanceladoState(PaymentState):
+    def anexar_comprovante(self, payment: Payment, link: str):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Pagamento cancelado.")
+
+    def validar(self, payment: Payment, aprovado: bool, observacao: str = None):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Pagamento cancelado.")
+
+    def cancelar(self, payment: Payment, motivo: str):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Pagamento já está cancelado.")
+
+
+# 3. Factory
 class PaymentStateFactory:
     @staticmethod
     def get_state(status: PaymentStatus) -> PaymentState:
@@ -96,6 +130,6 @@ class PaymentStateFactory:
             PaymentStatus.EM_ANALISE: EmAnaliseState(),
             PaymentStatus.APROVADO: AprovadoState(),
             PaymentStatus.REJEITADO: RejeitadoState(),
-            PaymentStatus.CANCELADO: AprovadoState()  # Usa lógica restritiva do aprovado ou cria um CanceladoState
+            PaymentStatus.CANCELADO: CanceladoState()
         }
         return mapping.get(status, PendenteState())

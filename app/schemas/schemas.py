@@ -102,6 +102,7 @@ class UserRead(UserBase):
     id: int
     dataDeEntrada: datetime
     active: bool
+    status_financeiro: str = "REGULAR"
 
     addresses: List[AddressRead] = []
     payments: List[PaymentRead] = []

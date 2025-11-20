@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlmodel import Session
+from datetime import date
 
 from app.db.database import get_session
 from app.services.document_service import DocumentService
@@ -26,9 +27,7 @@ def download_receipt(
         payment_service: PaymentService = Depends(get_payment_service),
         current_user: User = Depends(get_current_user)
 ):
-    """Baixa o PDF do Recibo de Pagamento."""
     payment = payment_service.get_payment_by_id(session, payment_id)
-
     if not payment:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Pagamento não encontrado")
 
@@ -59,6 +58,17 @@ def download_declaration(
 
     if not current_user.active:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Membro inativo não pode emitir declaração.")
+
+    # --- BLOQUEIO DE INADIMPLÊNCIA ---
+    hoje = date.today()
+    for p in current_user.payments:
+        # Se tem boleto Pendente/Rejeitado vencido
+        if p.status in [PaymentStatus.PENDENTE, PaymentStatus.REJEITADO] and p.data_vencimento.date() < hoje:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                "Declaração bloqueada: Existem mensalidades em atraso. Regularize sua situação."
+            )
+    # ----------------------------------
 
     pdf_bytes = doc_service.gerar_declaracao_regularidade(current_user)
 
