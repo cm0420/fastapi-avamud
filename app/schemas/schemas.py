@@ -145,3 +145,11 @@ class SystemConfigRead(SQLModel):
 class SystemConfigUpdate(BaseModel):
     valor_mensalidade: Optional[Decimal] = None
     dia_vencimento: Optional[int] = None
+
+class PasswordRecoveryRequest(BaseModel):
+    email: EmailStr
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+    codigo_recuperacao: str
+    nova_senha: str
