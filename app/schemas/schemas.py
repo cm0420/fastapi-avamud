@@ -1,25 +1,23 @@
-# app/schemas/schemas.py
-
 from sqlmodel import SQLModel
-from pydantic import EmailStr, BaseModel  # BaseModel é um DTO puro
+from pydantic import EmailStr, BaseModel
 from typing import Optional, List
 from datetime import datetime
 from decimal import Decimal
+from app.models.models import PaymentStatus, Role
 
-# --- Schemas de Autenticação (AuthDto, AcessDto) ---
-# Como estes não refletem uma tabela, usamos BaseModel
 
+# --- Schemas de Autenticação ---
 class AuthRequest(BaseModel):
     username: str
     password: str
 
+
 class AuthResponse(BaseModel):
     token: str
 
-# --- Schemas de Address (AddressDto) ---
 
+# --- Schemas de Address ---
 class AddressBase(SQLModel):
-    # DTO base com campos comuns
     rua: str
     numero: str
     bairro: str
@@ -27,37 +25,56 @@ class AddressBase(SQLModel):
     estado: str
     cep: str
 
+
 class AddressCreate(AddressBase):
-    # DTO para criar (tem o user_id)
     user_id: int
+
 
 class AddressRead(AddressBase):
-    # DTO para ler (tem o id)
     id: int
     user_id: int
-    
+
+
 class AddressUpdate(AddressBase):
-    # DTO para atualizar (só os campos base)
     pass
 
-# --- Schemas de Payment (PaymentDto) ---
 
+# --- Schemas de Payment ---
 class PaymentBase(SQLModel):
     valor: Decimal
-    dataPagamento: Optional[datetime] = None
+    data_vencimento: datetime
+
 
 class PaymentCreate(PaymentBase):
     user_id: int
 
+
 class PaymentRead(PaymentBase):
     id: int
     user_id: int
+    status: PaymentStatus
+    link_comprovante: Optional[str]
+    observacao: Optional[str]
+    data_pagamento: Optional[datetime]
+    data_vencimento: datetime
+    valor: Decimal
 
-class PaymentUpdate(PaymentBase):
-    pass
 
-# --- Schemas de PaymentHistory (PaymentHistoryDto) ---
+class PaymentUpdate(BaseModel):
+    valor: Optional[Decimal] = None
+    data_vencimento: Optional[datetime] = None
 
+
+class PaymentAttachProof(BaseModel):
+    link_comprovante: str
+
+
+class PaymentReview(BaseModel):
+    aprovado: bool
+    observacao: Optional[str] = None
+
+
+# --- Schemas de PaymentHistory ---
 class PaymentHistoryRead(SQLModel):
     id: int
     action: str
@@ -65,34 +82,74 @@ class PaymentHistoryRead(SQLModel):
     user_id: Optional[int]
     payment_id: int
 
-# --- Schemas de User (UserDto) ---
 
+# --- Schemas de User ---
 class UserBase(SQLModel):
     nome: str
     cpf: str
     cnpj: str
     telefone: str
-    email: EmailStr # Valida o email automaticamente
+    email: EmailStr
     login: str
+    role: Role = Role.MEMBER
+
 
 class UserCreate(UserBase):
-    senha: str # Senha em texto plano, vamos fazer o hash no serviço
+    senha: str
+
 
 class UserRead(UserBase):
     id: int
     dataDeEntrada: datetime
-    
-    # Mostra os endereços e pagamentos aninhados na resposta
-    # Igual ao @JsonManagedReference / @JsonBackReference
+    active: bool
+    status_financeiro: str = "REGULAR"
+
     addresses: List[AddressRead] = []
     payments: List[PaymentRead] = []
 
+
 class UserUpdate(UserBase):
-    # Campos que podem ser atualizados
     nome: Optional[str] = None
     cpf: Optional[str] = None
     cnpj: Optional[str] = None
     telefone: Optional[str] = None
     email: Optional[EmailStr] = None
     login: Optional[str] = None
-    senha: Optional[str] = None # Permite atualização de senha opcional
+    senha: Optional[str] = None
+    role: Optional[Role] = None
+    active: Optional[bool] = None
+
+
+# --- Schemas de Relatórios ---
+class ReportDebtor(BaseModel):
+    user_id: int
+    nome: str
+    email: str
+    telefone: str
+    total_devido: Decimal
+    quantidade_boletos_abertos: int
+    dias_atraso_medio: int
+
+
+class ReportRevenue(BaseModel):
+    mes: str
+    total_arrecadado: Decimal
+    total_pendente: Decimal
+    qtd_pagamentos_confirmados: int
+
+# --- Schemas de Configuração ---
+class SystemConfigRead(SQLModel):
+    valor_mensalidade: Decimal
+    dia_vencimento: int
+
+class SystemConfigUpdate(BaseModel):
+    valor_mensalidade: Optional[Decimal] = None
+    dia_vencimento: Optional[int] = None
+
+class PasswordRecoveryRequest(BaseModel):
+    email: EmailStr
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+    codigo_recuperacao: str
+    nova_senha: str
