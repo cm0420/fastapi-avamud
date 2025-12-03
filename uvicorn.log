@@ -1,0 +1,103 @@
+nohup: ignorando entrada
+INFO:     Will watch for changes in these directories: ['/home/yago/Área de trabalho/avamud/fastapi-avamud']
+INFO:     Uvicorn running on http://127.0.0.1:8080 (Press CTRL+C to quit)
+INFO:     Started reloader process [7670] using WatchFiles
+INFO:     Started server process [7695]
+INFO:     Waiting for application startup.
+Starting up...
+2025-12-03 16:35:03,683 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-03 16:35:03,686 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("user")
+2025-12-03 16:35:03,688 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-03 16:35:03,696 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("address")
+2025-12-03 16:35:03,698 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-03 16:35:03,703 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("payment")
+2025-12-03 16:35:03,704 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-03 16:35:03,710 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("payment_history")
+2025-12-03 16:35:03,712 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-03 16:35:03,715 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("system_config")
+2025-12-03 16:35:03,717 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-03 16:35:03,722 INFO sqlalchemy.engine.Engine COMMIT
+INFO:     Application startup complete.
+2025-12-03 16:35:23,440 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-03 16:35:23,695 INFO sqlalchemy.engine.Engine SELECT user.id, user.nome, user.cpf, user.cnpj, user.telefone, user.email, user.senha, user.login, user."dataDeEntrada", user.role, user.active 
+FROM user 
+WHERE user.login = ?
+2025-12-03 16:35:23,697 INFO sqlalchemy.engine.Engine [generated in 0.00526s] ('tesoureiro',)
+INFO:     127.0.0.1:41130 - "POST /api/v1/auth/login HTTP/1.1" 200 OK
+2025-12-03 16:35:24,046 INFO sqlalchemy.engine.Engine ROLLBACK
+2025-12-03 16:36:34,142 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-03 16:36:34,145 INFO sqlalchemy.engine.Engine SELECT user.id, user.nome, user.cpf, user.cnpj, user.telefone, user.email, user.senha, user.login, user."dataDeEntrada", user.role, user.active 
+FROM user 
+WHERE user.login = ?
+2025-12-03 16:36:34,146 INFO sqlalchemy.engine.Engine [cached since 70.45s ago] ('admin',)
+INFO:     127.0.0.1:43598 - "POST /api/v1/auth/login HTTP/1.1" 200 OK
+2025-12-03 16:36:34,389 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:43598 - "GET /api/v1/users HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:43610 - "GET /api/v1/users HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:43452 - "POST /api/v1/users HTTP/1.1" 405 Method Not Allowed
+INFO:     127.0.0.1:46660 - "OPTIONS /api/v1/auth/login HTTP/1.1" 200 OK
+2025-12-03 16:38:51,502 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-03 16:38:51,504 INFO sqlalchemy.engine.Engine SELECT user.id, user.nome, user.cpf, user.cnpj, user.telefone, user.email, user.senha, user.login, user."dataDeEntrada", user.role, user.active 
+FROM user 
+WHERE user.login = ?
+2025-12-03 16:38:51,506 INFO sqlalchemy.engine.Engine [cached since 207.8s ago] ('admin',)
+INFO:     127.0.0.1:46660 - "POST /api/v1/auth/login HTTP/1.1" 200 OK
+2025-12-03 16:38:51,761 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:46660 - "OPTIONS /api/v1/users HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46664 - "OPTIONS /api/v1/users HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46660 - "GET /api/v1/users HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:46664 - "GET /api/v1/users HTTP/1.1" 404 Not Found
+2025-12-03 16:39:03,961 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-03 16:39:03,964 INFO sqlalchemy.engine.Engine SELECT user.id, user.nome, user.cpf, user.cnpj, user.telefone, user.email, user.senha, user.login, user."dataDeEntrada", user.role, user.active 
+FROM user 
+WHERE user.login = ?
+2025-12-03 16:39:03,966 INFO sqlalchemy.engine.Engine [cached since 220.3s ago] ('tesoureiro',)
+2025-12-03 16:39:04,215 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:50960 - "POST /api/v1/auth/login HTTP/1.1" 401 Unauthorized
+2025-12-03 16:39:24,918 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-03 16:39:24,920 INFO sqlalchemy.engine.Engine SELECT user.id, user.nome, user.cpf, user.cnpj, user.telefone, user.email, user.senha, user.login, user."dataDeEntrada", user.role, user.active 
+FROM user 
+WHERE user.login = ?
+2025-12-03 16:39:24,922 INFO sqlalchemy.engine.Engine [cached since 241.2s ago] ('tesoureiro',)
+INFO:     127.0.0.1:48640 - "POST /api/v1/auth/login HTTP/1.1" 200 OK
+2025-12-03 16:39:25,153 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:48640 - "OPTIONS /api/v1/payments HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53944 - "OPTIONS /api/v1/payments/history HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53948 - "OPTIONS /payments/1/documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53960 - "OPTIONS /api/v1/payments HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53962 - "OPTIONS /api/v1/payments/history HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53968 - "OPTIONS /payments/1/documents HTTP/1.1" 200 OK
+2025-12-03 16:39:25,484 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-03 16:39:25,489 INFO sqlalchemy.engine.Engine SELECT user.id, user.nome, user.cpf, user.cnpj, user.telefone, user.email, user.senha, user.login, user."dataDeEntrada", user.role, user.active 
+FROM user 
+WHERE user.login = ?
+2025-12-03 16:39:25,499 INFO sqlalchemy.engine.Engine [cached since 241.8s ago] ('tesoureiro',)
+INFO:     127.0.0.1:53962 - "GET /payments/1/documents HTTP/1.1" 404 Not Found
+2025-12-03 16:39:25,527 INFO sqlalchemy.engine.Engine SELECT payment_history.id, payment_history.action, payment_history."actionDate", payment_history.user_id, payment_history.payment_id 
+FROM payment_history
+2025-12-03 16:39:25,531 INFO sqlalchemy.engine.Engine [generated in 0.00528s] ()
+INFO:     127.0.0.1:53968 - "GET /api/v1/payments HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48640 - "GET /api/v1/payments/history HTTP/1.1" 200 OK
+2025-12-03 16:39:25,557 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:53948 - "GET /payments/1/documents HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53962 - "GET /api/v1/payments HTTP/1.1" 404 Not Found
+2025-12-03 16:39:25,597 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-03 16:39:25,599 INFO sqlalchemy.engine.Engine SELECT user.id, user.nome, user.cpf, user.cnpj, user.telefone, user.email, user.senha, user.login, user."dataDeEntrada", user.role, user.active 
+FROM user 
+WHERE user.login = ?
+2025-12-03 16:39:25,599 INFO sqlalchemy.engine.Engine [cached since 241.9s ago] ('tesoureiro',)
+INFO:     127.0.0.1:48640 - "OPTIONS /payments/2/documents HTTP/1.1" 200 OK
+2025-12-03 16:39:25,618 INFO sqlalchemy.engine.Engine SELECT payment_history.id, payment_history.action, payment_history."actionDate", payment_history.user_id, payment_history.payment_id 
+FROM payment_history
+2025-12-03 16:39:25,622 INFO sqlalchemy.engine.Engine [cached since 0.09278s ago] ()
+INFO:     127.0.0.1:53968 - "GET /api/v1/payments/history HTTP/1.1" 200 OK
+2025-12-03 16:39:25,639 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:53968 - "GET /payments/2/documents HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53968 - "GET /payments/2/documents HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53968 - "OPTIONS /payments/3/documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53962 - "OPTIONS /payments/3/documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53962 - "GET /payments/3/documents HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53968 - "GET /payments/3/documents HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53968 - "OPTIONS /payments/4/documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53968 - "GET /payments/4/documents HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53962 - "GET /payments/4/documents HTTP/1.1" 404 Not Found

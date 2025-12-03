@@ -15,7 +15,8 @@ class PaymentStatus(str, Enum):
 
 
 class Role(str, Enum):
-    ADMIN = "ADMIN"  # Tesoureiro
+    ADMIN = "ADMIN"  # Administrador
+    TREASURER = "TREASURER"  # Tesoureiro
     MEMBER = "MEMBER"  # Membro Comum / Ambulante
 
 

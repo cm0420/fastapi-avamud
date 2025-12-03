@@ -30,7 +30,7 @@ class AuthService:
         }
 
         token = jwt.create_access_token(data=token_data)
-        return AuthResponse(token=token)
+        return AuthResponse(token=token, username=user.login, role=user.role.value)
 
     def gerar_token_recuperacao(self, session: Session, email: str) -> str:
         """

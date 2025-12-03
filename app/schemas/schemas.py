@@ -14,6 +14,8 @@ class AuthRequest(BaseModel):
 
 class AuthResponse(BaseModel):
     token: str
+    username: str
+    role: str
 
 
 # --- Schemas de Address ---
