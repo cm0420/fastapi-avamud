@@ -101,3 +101,25 @@ INFO:     127.0.0.1:53968 - "GET /payments/3/documents HTTP/1.1" 404 Not Found
 INFO:     127.0.0.1:53968 - "OPTIONS /payments/4/documents HTTP/1.1" 200 OK
 INFO:     127.0.0.1:53968 - "GET /payments/4/documents HTTP/1.1" 404 Not Found
 INFO:     127.0.0.1:53962 - "GET /payments/4/documents HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:48242 - "GET /docs HTTP/1.1" 200 OK
+2025-12-03 16:40:48,983 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-03 16:40:48,985 INFO sqlalchemy.engine.Engine SELECT user.id, user.nome, user.cpf, user.cnpj, user.telefone, user.email, user.senha, user.login, user."dataDeEntrada", user.role, user.active 
+FROM user 
+WHERE user.login = ?
+2025-12-03 16:40:48,986 INFO sqlalchemy.engine.Engine [cached since 325.3s ago] ('admin',)
+INFO:     127.0.0.1:60906 - "POST /api/v1/auth/login HTTP/1.1" 200 OK
+2025-12-03 16:40:49,250 INFO sqlalchemy.engine.Engine ROLLBACK
+2025-12-03 16:40:49,314 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-03 16:40:49,316 INFO sqlalchemy.engine.Engine SELECT user.id, user.nome, user.cpf, user.cnpj, user.telefone, user.email, user.senha, user.login, user."dataDeEntrada", user.role, user.active 
+FROM user 
+WHERE user.login = ?
+2025-12-03 16:40:49,317 INFO sqlalchemy.engine.Engine [cached since 325.6s ago] ('tesoureiro',)
+INFO:     127.0.0.1:60908 - "POST /api/v1/auth/login HTTP/1.1" 200 OK
+2025-12-03 16:40:49,878 INFO sqlalchemy.engine.Engine ROLLBACK
+2025-12-03 16:40:50,061 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-03 16:40:50,077 INFO sqlalchemy.engine.Engine SELECT user.id, user.nome, user.cpf, user.cnpj, user.telefone, user.email, user.senha, user.login, user."dataDeEntrada", user.role, user.active 
+FROM user 
+WHERE user.login = ?
+2025-12-03 16:40:50,078 INFO sqlalchemy.engine.Engine [cached since 326.4s ago] ('membro',)
+INFO:     127.0.0.1:60910 - "POST /api/v1/auth/login HTTP/1.1" 200 OK
+2025-12-03 16:40:50,998 INFO sqlalchemy.engine.Engine ROLLBACK
