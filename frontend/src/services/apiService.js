@@ -189,3 +189,45 @@ export const authService = {
     return localStorage.getItem('authToken');
   }
 };
+
+// Serviços para relatórios
+export const reportService = {
+  // Relatório de inadimplência
+  async getInadimplencia() {
+    try {
+      const response = await api.get('/api/v1/reports/inadimplencia');
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar relatório de inadimplência:', error);
+      throw error;
+    }
+  },
+
+  // Relatório de arrecadação
+  async getArrecadacao(ano = new Date().getFullYear()) {
+    try {
+      const response = await api.get('/api/v1/reports/arrecadacao', {
+        params: { ano }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar relatório de arrecadação:', error);
+      throw error;
+    }
+  },
+
+  // Buscar usuários com status financeiro
+  async getUsersWithFinancialStatus(status = null, activeOnly = false) {
+    try {
+      const params = {};
+      if (status) params.financial_status = status;
+      if (activeOnly) params.active_only = true;
+
+      const response = await api.get('/api/v1/users/', { params });
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar usuários com status financeiro:', error);
+      throw error;
+    }
+  }
+};

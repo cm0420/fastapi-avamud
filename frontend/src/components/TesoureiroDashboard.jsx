@@ -17,22 +17,32 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { usePayments } from '../hooks/useApi';
+import { usePayments, useReports } from '../hooks/useApi';
 import api from '../api';
 
 export function TesoureiroDashboard({ userName, onLogout }) {
   const [activeMenu, setActiveMenu] = useState("overview");
-  
+
   // Hook para dados financeiros via API
-  const { 
-    payments, 
-    paymentHistory, 
-    loading: apiLoading, 
-    error: apiError, 
-    createPayment, 
-    getFinancialStats, 
-    getTransactionsForDashboard 
+  const {
+    payments,
+    paymentHistory,
+    loading: apiLoading,
+    error: apiError,
+    createPayment,
+    getFinancialStats,
+    getTransactionsForDashboard
   } = usePayments();
+
+  // Hook para relatórios
+  const {
+    inadimplentes,
+    arrecadacao,
+    loading: reportLoading,
+    error: reportError,
+    loadInadimplencia,
+    loadArrecadacao
+  } = useReports();
 
   // Dados das transações vêm da API
   const transactions = getTransactionsForDashboard();
@@ -104,6 +114,11 @@ export function TesoureiroDashboard({ userName, onLogout }) {
       id: "overview",
       label: "Visão Geral",
       icon: TrendingUp,
+    },
+    {
+      id: "inadimplencia",
+      label: "Inadimplência",
+      icon: AlertCircle,
     },
     {
       id: "relatorios",
@@ -355,6 +370,82 @@ export function TesoureiroDashboard({ userName, onLogout }) {
                         </div>
                       </div>
                     ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Inadimplência */}
+          {activeMenu === "inadimplencia" && (
+            <div className="space-y-6">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div>
+                  <h1 className="text-2xl font-bold text-foreground">Relatório de Inadimplência</h1>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Membros com pagamentos pendentes ou vencidos
+                  </p>
+                </div>
+                <Button onClick={loadInadimplencia} className="bg-primary hover:bg-primary/90">
+                  <Download className="w-4 h-4 mr-2" />
+                  Atualizar Relatório
+                </Button>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>
+                    Inadimplentes ({inadimplentes.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full table-auto text-sm">
+                      <thead className="text-left text-xs text-muted-foreground">
+                        <tr>
+                          <th className="px-3 py-2">Membro</th>
+                          <th className="px-3 py-2">Total Devido (R$)</th>
+                          <th className="px-3 py-2">Dias em Atraso</th>
+                          <th className="px-3 py-2">Boletos Vencidos</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reportLoading ? (
+                          <tr>
+                            <td colSpan={4} className="text-center py-8">
+                              <div className="flex items-center justify-center space-x-2">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <span>Carregando relatório...</span>
+                              </div>
+                            </td>
+                          </tr>
+                        ) : reportError ? (
+                          <tr>
+                            <td colSpan={4} className="text-center py-8 text-red-600">
+                              <div className="flex items-center justify-center space-x-2">
+                                <AlertCircle className="h-4 w-4" />
+                                <span>Erro ao carregar: {reportError}</span>
+                              </div>
+                            </td>
+                          </tr>
+                        ) : inadimplentes.length === 0 ? (
+                          <tr>
+                            <td colSpan={4} className="text-center py-8 text-muted-foreground">
+                              Nenhum inadimplente encontrado
+                            </td>
+                          </tr>
+                        ) : (
+                          inadimplentes.map((item) => (
+                            <tr key={item.user_id} className="border-b">
+                              <td className="px-3 py-2 font-medium">{item.membro_nome}</td>
+                              <td className="px-3 py-2 text-red-600">R$ {Number(item.total_devido || 0).toFixed(2)}</td>
+                              <td className="px-3 py-2">{item.dias_atraso} dias</td>
+                              <td className="px-3 py-2">{item.quantidade_vencidos}</td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                 </CardContent>
               </Card>

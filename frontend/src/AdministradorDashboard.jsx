@@ -16,8 +16,11 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
+  FileText,
+  TrendingUp,
+  BarChart3,
 } from "lucide-react";
-import { useUsers } from './hooks/useApi';
+import { useUsers, useReports } from './hooks/useApi';
 import {
   Dialog,
   DialogContent,
@@ -37,9 +40,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
 
 export function AdministradorDashboard({ userName, onLogout }) {
   const [activeMenu, setActiveMenu] = useState("membros");
-  
+
   // Hook para gerenciar usuários via API
   const { users: allUsers, loading: apiLoading, error: apiError, createUser, updateUser, deleteUser } = useUsers();
+
+  // Hook para gerenciar relatórios
+  const {
+    inadimplentes,
+    arrecadacao,
+    loading: reportLoading,
+    error: reportError,
+    loadInadimplencia,
+    loadArrecadacao
+  } = useReports();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -294,6 +307,21 @@ export function AdministradorDashboard({ userName, onLogout }) {
       label: "Gerenciar Usuários",
       icon: Users,
     },
+    {
+      id: "inadimplencia",
+      label: "Inadimplência",
+      icon: AlertCircle,
+    },
+    {
+      id: "arrecadacao",
+      label: "Arrecadação",
+      icon: BarChart3,
+    },
+    {
+      id: "dashboard",
+      label: "Dashboard Financeiro",
+      icon: TrendingUp,
+    },
   ];
 
   return (
@@ -499,6 +527,244 @@ export function AdministradorDashboard({ userName, onLogout }) {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+          )}
+
+          {/* Relatório de Inadimplência */}
+          {activeMenu === "inadimplencia" && (
+            <div className="space-y-6">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div>
+                  <h1 className="text-2xl font-bold text-foreground">Relatório de Inadimplência</h1>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Membros com pagamentos pendentes ou vencidos
+                  </p>
+                </div>
+                <Button onClick={loadInadimplencia} className="bg-primary hover:bg-primary/90">
+                  <FileText className="w-4 h-4 mr-2" />
+                  Atualizar Relatório
+                </Button>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>
+                    Inadimplentes ({inadimplentes.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Membro</TableHead>
+                          <TableHead>Total Devido (R$)</TableHead>
+                          <TableHead>Dias em Atraso</TableHead>
+                          <TableHead>Quantidade de Boletos Vencidos</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {reportLoading ? (
+                          <TableRow>
+                            <TableCell colSpan={4} className="text-center py-8">
+                              <div className="flex items-center justify-center space-x-2">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <span>Carregando relatório...</span>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ) : reportError ? (
+                          <TableRow>
+                            <TableCell colSpan={4} className="text-center py-8 text-red-600">
+                              <div className="flex items-center justify-center space-x-2">
+                                <AlertCircle className="h-4 w-4" />
+                                <span>Erro ao carregar: {reportError}</span>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ) : inadimplentes.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                              Nenhum inadimplente encontrado
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          inadimplentes.map((item) => (
+                            <TableRow key={item.user_id}>
+                              <TableCell className="font-medium">{item.membro_nome}</TableCell>
+                              <TableCell>R$ {Number(item.total_devido || 0).toFixed(2)}</TableCell>
+                              <TableCell>{item.dias_atraso}</TableCell>
+                              <TableCell>{item.quantidade_vencidos}</TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Relatório de Arrecadação */}
+          {activeMenu === "arrecadacao" && (
+            <div className="space-y-6">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div>
+                  <h1 className="text-2xl font-bold text-foreground">Relatório de Arrecadação</h1>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Total arrecadado por mês no ano atual
+                  </p>
+                </div>
+                <Button onClick={() => loadArrecadacao()} className="bg-primary hover:bg-primary/90">
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  Atualizar Relatório
+                </Button>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>
+                    Arrecadação Mensal - {new Date().getFullYear()}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Mês</TableHead>
+                          <TableHead>Total Arrecadado (R$)</TableHead>
+                          <TableHead>Quantidade de Pagamentos</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {reportLoading ? (
+                          <TableRow>
+                            <TableCell colSpan={3} className="text-center py-8">
+                              <div className="flex items-center justify-center space-x-2">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <span>Carregando relatório...</span>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ) : reportError ? (
+                          <TableRow>
+                            <TableCell colSpan={3} className="text-center py-8 text-red-600">
+                              <div className="flex items-center justify-center space-x-2">
+                                <AlertCircle className="h-4 w-4" />
+                                <span>Erro ao carregar: {reportError}</span>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ) : arrecadacao.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                              Nenhum dado de arrecadação encontrado
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          arrecadacao.map((item) => (
+                            <TableRow key={item.mes}>
+                              <TableCell className="font-medium">{item.mes}/{item.ano}</TableCell>
+                              <TableCell>R$ {Number(item.total_arrecadado || 0).toFixed(2)}</TableCell>
+                              <TableCell>{item.quantidade_pagamentos}</TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Dashboard Financeiro */}
+          {activeMenu === "dashboard" && (
+            <div className="space-y-6">
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">Dashboard Financeiro</h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Visão geral das finanças da associação
+                </p>
+              </div>
+
+              {/* Cards de Resumo */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total de Membros</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {allUsers.length}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Membros cadastrados
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Inadimplentes</CardTitle>
+                    <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-red-600">
+                      {inadimplentes.length}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Membros com pagamentos vencidos
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Arrecadação do Ano</CardTitle>
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-green-600">
+                      R$ {arrecadacao.reduce((sum, item) => sum + Number(item.total_arrecadado || 0), 0).toFixed(2)}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Total arrecadado em {new Date().getFullYear()}
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Botões de Ações Rápidas */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Button
+                  onClick={() => setActiveMenu("inadimplencia")}
+                  variant="outline"
+                  className="h-24 flex flex-col gap-2"
+                >
+                  <AlertCircle className="w-6 h-6" />
+                  <span>Ver Inadimplentes</span>
+                </Button>
+                <Button
+                  onClick={() => setActiveMenu("arrecadacao")}
+                  variant="outline"
+                  className="h-24 flex flex-col gap-2"
+                >
+                  <BarChart3 className="w-6 h-6" />
+                  <span>Ver Arrecadação</span>
+                </Button>
+                <Button
+                  onClick={() => setActiveMenu("membros")}
+                  variant="outline"
+                  className="h-24 flex flex-col gap-2"
+                >
+                  <Users className="w-6 h-6" />
+                  <span>Gerenciar Usuários</span>
+                </Button>
+              </div>
             </div>
           )}
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { userService, paymentService } from '../services/apiService';
+import { userService, paymentService, reportService } from '../services/apiService';
 
 // Hook para gerenciar usuários
 export function useUsers() {
@@ -259,5 +259,70 @@ export function usePayments() {
     createPayment,
     getFinancialStats,
     getTransactionsForDashboard
+  };
+}
+
+// Hook para gerenciar relatórios
+export function useReports() {
+  const [inadimplentes, setInadimplentes] = useState([]);
+  const [arrecadacao, setArrecadacao] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Carregar relatório de inadimplência
+  const loadInadimplencia = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await reportService.getInadimplencia();
+      setInadimplentes(data);
+      return data;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Carregar relatório de arrecadação
+  const loadArrecadacao = async (ano = new Date().getFullYear()) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await reportService.getArrecadacao(ano);
+      setArrecadacao(data);
+      return data;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Buscar usuários com status financeiro específico
+  const getUsersWithFinancialStatus = async (status = null, activeOnly = false) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await reportService.getUsersWithFinancialStatus(status, activeOnly);
+      return data;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    inadimplentes,
+    arrecadacao,
+    loading,
+    error,
+    loadInadimplencia,
+    loadArrecadacao,
+    getUsersWithFinancialStatus
   };
 }
